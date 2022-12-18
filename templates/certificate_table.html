@@ -15,6 +15,10 @@
                                         </span>
                                         <span class="text">Add Certificate</span>
                         </a>
+                    <a class="btn btn-success btn-icon-split" id="import_certificate" style="cursor: pointer" href="/certificate/mass-generate/{{grp_id}}">
+                        <span class="text">Bulk Certify</span>
+                    </a>
+
                     <a class="btn btn-success btn-icon-split float-right" id="import_certificate" style="cursor: pointer" onclick="uploadFile('{{grp_id}}')">
                         <span class="icon text-white-50">
                            <i class="fa fa-upload" aria-hidden="true"></i>
@@ -54,7 +58,7 @@
                                                     class="fas {{'fa-check' if post.is_email_sent else 'fa-times'}}"
                                                 ></i>
                                             </td>
-                                            <td><a href="/certificate/generate/{{ post.number }}" class="btn btn-success btn-circle"><i class="fas fa-check"></i></a></td>
+                                            <td><a href="/certificate/generate/{{ post.number }}" target="_blank" class="btn btn-success btn-circle"><i class="fas fa-check"></i></a></td>
                                             <td><a onclick="editCertificate('{{grp_id}}','{{post.id}}')" class="btn btn-success btn-circle" id="edit_certificate" style="cursor: pointer"><i class="fas fa-edit"></i></a></td>
                                             <td><a href="/delete/{{ grp_id }}/certificates/{{ post.id }}" class="btn btn-danger btn-circle"><i class="fas fa-trash"></i></a></td>
                                         </tr>

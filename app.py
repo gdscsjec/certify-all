@@ -2,6 +2,10 @@ from flask import Flask, render_template, redirect, request, flash, url_for, jso
 from flask_sqlalchemy import SQLAlchemy
 import datetime, os
 import json
+import csv
+import io
+import webbrowser
+from time import sleep
 
 app = Flask(__name__)
 
@@ -63,6 +67,12 @@ class QRCode(db.Model):
 def dashboard_page():
     postc = len(Certificate.query.order_by(Certificate.id).all())
     return render_template('dashboard.html', favTitle="Hello world", postc=postc)
+
+@app.route('/get-all-fonts', methods=['GET'])
+def get_all_fonts():
+    fonts = Fonts.query.order_by(Fonts.id).all()
+    data = {'font': [fonts.name for fonts in fonts]}
+    return jsonify(data)
 
 @app.route("/edit/group/<string:id>", methods=['GET', 'POST'])
 def edit_org_page(id):
@@ -270,7 +280,7 @@ def delete_certificates_page(grp_id, id):
 
 
 @app.route("/certificate/generate/<string:certificateno>", methods=['GET', 'POST'])
-def certificate_generate(certificateno):
+def certificate_generate(certificateno, bulkDownload = 0):
     # if (host == True):
     #     try:
     #         ip_address = request.environ['HTTP_X_FORWARDED_FOR']
@@ -281,6 +291,7 @@ def certificate_generate(certificateno):
     # else:
     #     ip_address = ipc
     if (request.method == 'GET'):
+        bulkDownload = request.values.get('bulk', 0)
         # certificateno = request.form.get('certificateno')
         postc = Certificate.query.filter_by(number=certificateno).first()
         if (postc != None):
@@ -289,10 +300,84 @@ def certificate_generate(certificateno):
             # qr_code = QRCode.query.filter_by(
             #     certificate_num=certificateno).first()
             # img_url = qr_code.qr_code
-            return render_template('certificate.html', postf=postf, postc=postc, posto=posto, number=certificateno)
+            return render_template('certificate.html', postf=postf, postc=postc, posto=posto, number=certificateno, bulk = bulkDownload)
         elif (postc == None):
             flash("No details found. Contact your organization!", "danger")
     return render_template('Redesign-generate.html')
+
+@app.route('/upload/<string:grp_id>/certificate', methods=['POST', 'GET'])
+def upload_csv(grp_id):
+    group = Group.query.filter_by(id=grp_id).first()
+    csv_file = request.files['fileToUpload']
+    csv_file = io.TextIOWrapper(csv_file, encoding='utf-8')
+    csv_reader = csv.reader(csv_file, delimiter=',')
+    # This skips the first row of the CSV file.
+    next(csv_reader)
+    for row in csv_reader:
+        try:
+            last_certificate = Certificate.query.filter_by(
+                group_id=grp_id).order_by(-Certificate.id).first()
+            last_certificate_num = int(
+                last_certificate.number[len(last_certificate.number)-4:])
+            cert_number = str(last_certificate_num + 1).zfill(4)
+        except Exception as e:
+            cert_number = '1'.zfill(4)
+        number = group.prefix + cert_number
+        certificate = Certificate(
+            number=number, name=row[0], email=row[1], coursename=row[2], group_id=grp_id)
+        db.session.add(certificate)
+        db.session.commit()
+        # Create QR Code for this certificate
+        # link = f'{config("site_url")}/certify/{number}'
+        # new_qr = QRCode(certificate_num=number, link=link)
+        # qr_image = qrcode.QRCode(version=1, box_size=10, border=5)
+        # qr_image.add_data(link)
+        # qr_image.make(fit=True)
+        # img = qr_image.make_image(fill='black', back_color='white')
+        # buffer = io.BytesIO()
+        # img.save(buffer, format="PNG")
+        # buffer.seek(0)
+        # try:
+        #     if not app.debug:
+        #         # upload_image(buffer, number=number, folder="qr_codes")
+        #         # img_url = f"https://cgv.s3.us-east-2.amazonaws.com/qr_codes/{number}.png"
+        #         img_url = upload(buffer)
+        #     else:
+        #         try:
+        #             os.mkdir("static/qr_codes")
+        #         except Exception:
+        #             pass
+        #         img.save("static/qr_codes/"+f"{number}.png")
+        #         img_url = f"http://127.0.0.1:5000/static/qr_codes/{number}.png"
+        #     new_qr.qr_code = f"{img_url}"
+        #     new_qr.certificate_id = certificate.id
+        #     db.session.add(new_qr)
+        #     db.session.commit()
+
+        # except Exception as e:
+        #     print(e)
+    return jsonify(result=True, status=200)
+
+@app.route("/certificate/mass-generate/<string:groupno>")
+def massGenerate(groupno):
+    certnoList = Certificate.query.filter_by(group_id = groupno).limit(2).all()
+    # print(certnoList)
+    # print(certnoList[0].group_id)
+
+    # posto = Group.query.filter_by(id=groupno).first()
+    # postf = Fonts.query.filter_by(name=posto.font_name).first()
+
+    for member in certnoList:
+        # page = render_template("certificate.html", postf=postf, postc=member, posto=posto, number=member.number, bulk = 1)
+        # print(type(page))
+        # return redirect(url_for(certificate_generate(), postf=postf, postc=member, posto=posto, number=member.number, bulk = 1))
+        webbrowser.open(
+            f"http://127.0.0.1:5000/certificate/generate/{member.number}?bulk=1"
+        )
+        sleep(2)
+
+
+    return "All Files Downloaded"
 
 if __name__ == '__main__':
     db.create_all()

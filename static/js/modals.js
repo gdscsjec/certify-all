@@ -14,7 +14,6 @@ $("#add_group").click(function (e) {
           <input type="text" id="prefix" name="prefix" class="swal2-input" placeholder="Certificate ID Prefix">
           <select id="category" name="font_name" class="swal2-input">
           <option value="" disabled selected>Select the font</option>
-          <option value="Times New Roman" disabled selected>Times New Roman</option>
           </select>
           <input type="number" id="font_size" name="font_size" class="swal2-input" placeholder="Font Size">
           <input type="color" class="form-control form-control-color" id="textColor" value="#000000" title="Choose your text color">

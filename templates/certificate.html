@@ -220,7 +220,7 @@
             </div>
           </form>
           <br />
-          <canvas id="canvas" height="768px" width="1080px"></canvas>
+          <canvas id="canvas" height="595px" width="842px"></canvas>
           <br />
           <center>
             <div style="padding: 10px">
@@ -330,30 +330,41 @@
 
       function drawImage() {
         ctx.drawImage(image1, 0, 0, canvas.width, canvas.height);
-        const link2 = qrcodelinkInput.value;
-        image2.src = link2;
-        ctx.drawImage(
-          image2,
-          XqrcodelinkInput.value,
-          YqrcodelinkInput.value,
-          130,
-          130
-        ); //QrcodeLink
+        // const link2 = qrcodelinkInput.value;
+        // image2.src = link2;
+        // ctx.drawImage(
+        //   image2,
+        //   XqrcodelinkInput.value,
+        //   YqrcodelinkInput.value,
+        //   130,
+        //   130
+        // ); //QrcodeLink
         ctx.font = "normal {{posto.font_size}}px {{posto.font_name}}";
         ctx.fillStyle = "{{posto.textColor}}";
+        ctx.textAlign = "center";
         ctx.fillText(nameInput.value, XnameInput.value, YnameInput.value);
-        ctx.font = "bolder 20px Calibri";
-        ctx.fillStyle = "#000000";
-        ctx.fillText(
-          "ID:#" + certificateIdInput.value,
-          XcertificateIdInput.value,
-          YcertificateIdInput.value
-        );
+        // ctx.font = "normal 15px Open Sans";
+        // ctx.fillStyle = "#000000";
+        // ctx.fillText(
+        //   "ID:#" + certificateIdInput.value,
+        //   XcertificateIdInput.value,
+        //   YcertificateIdInput.value
+        // );
+        
+        {% if bulk == 1 %}
+          downloadBtn.click();
+          window.close()
+        {% endif %}
       }
       downloadBtn.addEventListener("click", function () {
         downloadBtn.href = canvas.toDataURL("image/png");
         downloadBtn.download = "Certificate - " + nameInput.value;
       });
+
+      // window.onload = function () {
+      //   let cert = canvas.toDataURL("image/png");
+      //   download("Certificate - " + nameInput.value, cert, "image/png");
+      // };
     </script>
   </body>
 </html>
